@@ -1,0 +1,629 @@
+
+# team project 
+
+package frame;
+  
+import javax.swing.*;
+import java.awt.*;
+import static java.awt.Component.CENTER_ALIGNMENT;
+import java.awt.event.*;
+import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
+
+public class Frame {
+    public static void main(String[] args) {
+        Label l = new Label();
+        l.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        l.setSize(400, 800);
+        l.setVisible(true);
+    }
+}
+
+ class Label extends JFrame {
+    private final JLabel label1;
+    private final JLabel label2;
+    private final JComboBox<String> box;
+   private final static String[] op = { "choose..", "Matrix Multiplication", "Scalar Product", "Add & Sub", "Maximum & Minimum","Transpose"};
+
+
+    public Label() {
+        super("MATRIX CALCULATOR");
+        getContentPane().setBackground(new Color(255, 228, 242));
+        setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+
+        label1 = new JLabel("Welcome");
+        label1.setFont(new Font("Arial", Font.BOLD, 28));
+        label1.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        label2 = new JLabel("Choose the operation to perform:");
+        label2.setFont(new Font("Arial", Font.PLAIN, 18));
+        label2.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        box = new JComboBox<>(op);
+        box.setMaximumSize(new Dimension(200, 30));
+        box.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        add(Box.createVerticalStrut(100));
+        add(label1);
+        add(Box.createVerticalStrut(80));
+        add(label2);
+        add(Box.createVerticalStrut(20));
+        add(box);
+
+        box.addItemListener(new Check());
+    }
+ 
+    private class Check implements ItemListener {
+        @Override
+        public void itemStateChanged(ItemEvent event) {
+            if (event.getStateChange() == ItemEvent.SELECTED) {
+                String choice = (String) box.getSelectedItem();
+                if (choice.equals("choose..")) return;
+                dispose();
+     switch (choice) {
+    case "Matrix Multiplication":
+        new MultyFrame();
+        break;
+    case "Scalar Product":
+        new ScalerFrame();
+        break;
+    case "Add & Sub":
+        new MatrixApp();
+        break;
+    case "Maximum & Minimum":
+        new MaxMinFrame();
+        break;
+    case "Transpose":
+       new TransposeFrame();
+        break;  
+}
+
+            }
+        }
+    }
+}
+
+
+ class MaxMinFrame extends JFrame {
+    private JTextArea inputArea, outputArea;
+    private JButton maxMinButton;
+
+    public MaxMinFrame() {
+        setTitle("Matrix Operations - Max/Min");
+        setLayout(new FlowLayout());
+
+        JPanel topPanel = new JPanel(new GridLayout(2, 1));
+        JPanel buttonPanel = new JPanel();
+
+        inputArea = new JTextArea(5, 40);
+        outputArea = new JTextArea(5, 40);
+        outputArea.setEditable(false);
+
+        maxMinButton = new JButton("Find Max / Min");
+
+        buttonPanel.add(maxMinButton);
+
+        topPanel.add(new JLabel("Enter matrix (rows separated by new lines, values by spaces):"));
+        topPanel.add(new JScrollPane(inputArea));
+
+        add(topPanel, BorderLayout.NORTH);
+        add(buttonPanel, BorderLayout.CENTER);
+        add(new JScrollPane(outputArea), BorderLayout.SOUTH);
+
+        maxMinButton.addActionListener(e -> findMaxMin());
+
+        setSize(400, 800);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setVisible(true);
+    }
+
+    private void findMaxMin() {
+        try {
+            int[][] matrix = parseMatrix(inputArea.getText());
+            int max = Integer.MIN_VALUE;
+            int min = Integer.MAX_VALUE;
+
+            for (int[] row : matrix) {
+                for (int val : row) {
+                    if (val > max) max = val;
+                    if (val < min) min = val;
+                }
+            }
+
+            outputArea.setText("Maximum value in the matrix: " + max + "\n" +
+                               "Minimum value in the matrix: " + min);
+        } catch (Exception ex) {
+            outputArea.setText("Error! Please check the matrix format.");
+        }
+    }
+
+    private int[][] parseMatrix(String text) throws Exception {
+        String[] rows = text.trim().split("\n");
+        int[][] matrix = new int[rows.length][];
+        for (int i = 0; i < rows.length; i++) {
+            String[] values = rows[i].trim().split("\\s+");
+            matrix[i] = new int[values.length];
+            for (int j = 0; j < values.length; j++) {
+                matrix[i][j] = Integer.parseInt(values[j]);
+            }
+        }
+        return matrix;
+    }
+}
+
+
+class MultyFrame extends JFrame {
+    public MultyFrame() {
+        setTitle("Matrix Multiplication");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        getContentPane().setBackground(new Color(230, 240, 255));
+        setSize(400, 800);
+        setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+
+        JTextField l1 = new JTextField(3);
+        JTextField m1 = new JTextField(3);
+        JTextField l2 = new JTextField(3);
+        JTextField m2 = new JTextField(3);
+
+        JTextArea mat1Input = new JTextArea(6, 25);
+        JTextArea mat2Input = new JTextArea(6, 25);
+        JTextArea resultArea = new JTextArea(6, 25);
+
+        mat1Input.setVisible(false);
+        mat2Input.setVisible(false);
+        resultArea.setEditable(false);
+        resultArea.setVisible(false);
+
+        mat1Input.setMargin(new Insets(10, 10, 10, 140));
+        mat2Input.setMargin(new Insets(10, 10, 10, 140)); 
+        resultArea.setMargin(new Insets(10, 10, 10, 140)); 
+
+        JButton generateBtn = new JButton("Generate Fields");
+        JButton calcBtn = new JButton("Calculate");
+        calcBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        calcBtn.setVisible(false);
+ 
+        add(makeMatrixSizePanel("Matrix 1", l1, m1));
+        add(makeMatrixSizePanel("Matrix 2", l2, m2));
+
+        add(Box.createVerticalStrut(10));
+        generateBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        add(generateBtn);
+        add(Box.createVerticalStrut(10));
+
+        add(makeLeftLabel("Enter Matrix 1 (space-separated):"));
+        add(makeLeftScroll(mat1Input));
+
+        add(makeLeftLabel("Enter Matrix 2 (space-separated):"));
+        add(makeLeftScroll(mat2Input));
+
+        add(Box.createVerticalStrut(10));
+        add(calcBtn);
+        add(Box.createVerticalStrut(10));
+
+        add(makeLeftLabel("Result:"));
+        add(makeLeftScroll(resultArea));
+
+        setVisible(true);
+
+        generateBtn.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e) {
+        try {
+            int c1 = Integer.parseInt(m1.getText());
+            int r2 = Integer.parseInt(l2.getText());
+
+            if (c1 != r2) {
+                JOptionPane.showMessageDialog(null,
+                        "Error: Columns of Matrix 1 must match Rows of Matrix 2.",
+                        "Dimension Error", JOptionPane.ERROR_MESSAGE);
+                mat1Input.setVisible(false);
+                mat2Input.setVisible(false);
+                calcBtn.setVisible(false);
+                resultArea.setVisible(false);
+                return;
+            }
+
+            mat1Input.setVisible(true);
+            mat2Input.setVisible(true);
+            calcBtn.setVisible(true);
+            resultArea.setVisible(true);
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(null,
+                    "Please enter valid dimensions.",
+                    "Input Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+});
+
+        calcBtn.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e) {
+        try {
+            int r1 = Integer.parseInt(l1.getText());
+            int c1 = Integer.parseInt(m1.getText());
+            int r2 = Integer.parseInt(l2.getText());
+            int c2 = Integer.parseInt(m2.getText());
+
+            String[] mat1Lines = mat1Input.getText().split("\n");
+            String[] mat2Lines = mat2Input.getText().split("\n");
+
+            int[][] mat1 = new int[r1][c1];
+            int[][] mat2 = new int[r2][c2];
+
+            for (int i = 0; i < r1; i++) {
+                String[] row = mat1Lines[i].trim().split("\\s+");
+                for (int j = 0; j < c1; j++) {
+                    mat1[i][j] = Integer.parseInt(row[j]);
+                }
+            }
+
+            for (int i = 0; i < r2; i++) {
+                String[] row = mat2Lines[i].trim().split("\\s+");
+                for (int j = 0; j < c2; j++) {
+                    mat2[i][j] = Integer.parseInt(row[j]);
+                }
+            }
+
+            int[][] result = new int[r1][c2];
+            for (int i = 0; i < r1; i++)
+                for (int j = 0; j < c2; j++)
+                    for (int k = 0; k < c1; k++)
+                        result[i][j] += mat1[i][k] * mat2[k][j];
+
+            resultArea.setText("");
+            for (int i = 0; i < r1; i++) {
+                for (int j = 0; j < c2; j++)
+                    resultArea.append(result[i][j] + "\t");
+                resultArea.append("\n");
+            }
+
+        } catch (Exception ex) {
+            resultArea.setText("Please enter valid matrix data.");
+        }
+    }
+});
+
+    }
+
+    public JPanel makeMatrixSizePanel(String title, JTextField rowField, JTextField colField) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panel.setBackground(new Color(230, 240, 255));
+        panel.add(new JLabel(title + " Rows:"));
+        panel.add(rowField);
+        panel.add(Box.createHorizontalStrut(10));
+        panel.add(new JLabel("Columns:"));
+        panel.add(colField);
+        return panel;
+    }
+
+    public JPanel makeLeftScroll(JTextArea area) {
+        JScrollPane scroll = new JScrollPane(area);
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panel.setBackground(new Color(230, 240, 255));
+        panel.add(scroll);
+        return panel;
+    }
+
+    public JPanel makeLeftLabel(String text) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panel.setBackground(new Color(230, 240, 255));
+        JLabel label = new JLabel(text);
+        panel.add(label);
+        return panel;
+    }
+}
+
+
+class ScalerFrame extends JFrame {
+    private JTextField scalarField;
+    private JTextField rowField;
+    private JTextField colField;
+    private JTextArea matrixField; 
+    private JTextArea resultArea;
+    private JButton generateBtn, calcBtn;
+
+    public ScalerFrame() {
+        setTitle("Scalar Product");
+        setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+        getContentPane().setBackground(new Color(230, 255, 230));
+        setSize(400, 800); 
+        
+        JLabel scalarLabel = new JLabel("Scalar value:");
+        scalarLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+        scalarLabel.setAlignmentX(CENTER_ALIGNMENT);
+
+        scalarField = new JTextField(5);
+        scalarField.setMaximumSize(new Dimension(100, 25));
+        scalarField.setAlignmentX(CENTER_ALIGNMENT);
+
+        JLabel rowLabel = new JLabel("Number of Rows:");
+        rowLabel.setAlignmentX(CENTER_ALIGNMENT);
+        rowField = new JTextField(5);
+        rowField.setMaximumSize(new Dimension(100, 25));
+        rowField.setAlignmentX(CENTER_ALIGNMENT);
+
+        JLabel colLabel = new JLabel("Number of Columns:");
+        colLabel.setAlignmentX(CENTER_ALIGNMENT);
+        colField = new JTextField(5);
+        colField.setMaximumSize(new Dimension(100, 25));
+        colField.setAlignmentX(CENTER_ALIGNMENT);
+
+        generateBtn = new JButton("Generate Matrix Fields");
+        generateBtn.setAlignmentX(CENTER_ALIGNMENT);
+
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.Y_AXIS));
+        inputPanel.setBackground(new Color(230, 255, 230));
+
+        calcBtn = new JButton("Calculate");
+        calcBtn.setAlignmentX(CENTER_ALIGNMENT);
+        calcBtn.setEnabled(false);  
+
+        matrixField = new JTextArea(10, 30);
+        matrixField.setAlignmentX(CENTER_ALIGNMENT);
+        matrixField.setLineWrap(true);
+        matrixField.setWrapStyleWord(true);
+        matrixField.setMaximumSize(new Dimension(300, 200));  
+        matrixField.setEnabled(false);  
+
+        resultArea = new JTextArea(10, 30);
+        resultArea.setEditable(false);
+        resultArea.setAlignmentX(CENTER_ALIGNMENT);
+        resultArea.setMaximumSize(new Dimension(300, 200));
+        resultArea.setFont(new Font("Arial", Font.PLAIN, 16));
+
+        add(Box.createVerticalStrut(10));
+        add(scalarLabel);
+        add(scalarField);
+        add(Box.createVerticalStrut(10));
+        add(rowLabel);
+        add(rowField);
+        add(Box.createVerticalStrut(10));
+        add(colLabel);
+        add(colField);
+        add(Box.createVerticalStrut(10));
+        add(generateBtn);
+        add(Box.createVerticalStrut(10));
+        add(inputPanel);
+        add(Box.createVerticalStrut(10));
+        add(calcBtn);  
+        add(Box.createVerticalStrut(10));
+        add(new JScrollPane(matrixField));  
+        add(Box.createVerticalStrut(10));
+        add(new JScrollPane(resultArea));  
+
+        setVisible(true);
+
+       generateBtn.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e) {
+        try {
+            int rows = Integer.parseInt(rowField.getText());
+            int cols = Integer.parseInt(colField.getText());
+
+            matrixField.setText("");  
+            resultArea.setText("");  
+            matrixField.setEnabled(true); 
+            calcBtn.setEnabled(true);  
+
+        } catch (NumberFormatException ex) {
+            resultArea.setText("Please enter valid row and column numbers.");
+        }
+    }
+});
+
+
+        calcBtn.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e) {
+        try {
+            int val = Integer.parseInt(scalarField.getText());
+
+            String[] elements = matrixField.getText().split("\\s+");
+            int rows = Integer.parseInt(rowField.getText());
+            int cols = Integer.parseInt(colField.getText());
+
+            if (elements.length != rows * cols) {
+                resultArea.setText("Please fill the matrix correctly.");
+                return;
+            }
+
+            int[][] result = new int[rows][cols];
+            int idx = 0;
+
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    int num = Integer.parseInt(elements[idx++]);
+                    result[i][j] = num * val;
+                }
+            }
+
+            StringBuilder sb = new StringBuilder("Result:\n");
+            for (int[] row : result) {
+                for (int num : row) sb.append(num).append("\t");
+                sb.append("\n");
+            }
+            resultArea.setText(sb.toString());
+
+        } catch (NumberFormatException ex) {
+            resultArea.setText("Please fill the matrix fields with numbers.");
+        }
+    }
+});
+
+    }
+}
+
+
+
+ class TransposeFrame extends JFrame {
+    private JTextArea inputArea, outputArea;
+    private JButton transposeButton;
+
+    public TransposeFrame() {
+        setTitle("Matrix Operations - Transpose");
+        setLayout(new FlowLayout());
+
+        JPanel topPanel = new JPanel(new GridLayout(2, 1));
+        JPanel buttonPanel = new JPanel();
+
+        inputArea = new JTextArea(5, 40);
+        outputArea = new JTextArea(5, 40);
+        outputArea.setEditable(false);
+
+        transposeButton = new JButton("Transpose");
+
+        buttonPanel.add(transposeButton);
+
+        topPanel.add(new JLabel("Enter matrix (rows separated by new lines, values by spaces):"));
+        topPanel.add(new JScrollPane(inputArea));
+
+        add(topPanel, BorderLayout.NORTH);
+        add(buttonPanel, BorderLayout.CENTER);
+        add(new JScrollPane(outputArea), BorderLayout.SOUTH);
+
+        transposeButton.addActionListener(e -> transposeMatrix());
+
+        setSize(400, 800);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setVisible(true);
+    }
+
+    private void transposeMatrix() {
+        try {
+            int[][] matrix = parseMatrix(inputArea.getText());
+            int rows = matrix.length;
+            int cols = matrix[0].length;
+
+            StringBuilder result = new StringBuilder("Transpose of the matrix:\n");
+            for (int j = 0; j < cols; j++) {
+                for (int i = 0; i < rows; i++) {
+                    result.append(matrix[i][j]).append(" ");
+                }
+                result.append("\n");
+            }
+
+            outputArea.setText(result.toString());
+
+        } catch (Exception ex) {
+            outputArea.setText("Error! Please check the matrix format.");
+        }
+    }
+
+    private int[][] parseMatrix(String text) throws Exception {
+        String[] rows = text.trim().split("\n");
+        int[][] matrix = new int[rows.length][];
+        for (int i = 0; i < rows.length; i++) {
+            String[] values = rows[i].trim().split("\\s+");
+            matrix[i] = new int[values.length];
+            for (int j = 0; j < values.length; j++) {
+                matrix[i][j] = Integer.parseInt(values[j]);
+            }
+        }
+        return matrix;
+    }
+}
+
+ class MatrixApp extends JFrame {
+    private JTextArea matrixAInput, matrixBInput, resultArea;
+    private JButton calculateButton;
+    private JComboBox<String> operationBox;
+
+    public MatrixApp() {
+        setTitle("Matrix Calculator");
+        setSize(400, 800);
+        setLayout(new BorderLayout(10, 10));
+
+        JLabel titleLabel = new JLabel("Select the operation to perform on the two matrices", JLabel.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        add(titleLabel, BorderLayout.NORTH);
+
+        matrixAInput = new JTextArea(5, 20);
+        matrixBInput = new JTextArea(5, 20);
+        resultArea = new JTextArea(8, 20);
+        resultArea.setEditable(false);
+
+        JPanel inputPanel = new JPanel(new GridLayout(6, 1, 5, 5));
+        inputPanel.add(new JLabel("Matrix A:"));
+        inputPanel.add(new JScrollPane(matrixAInput));
+        inputPanel.add(new JLabel("Matrix B:"));
+        inputPanel.add(new JScrollPane(matrixBInput));
+        inputPanel.add(new JLabel("Result:"));
+        inputPanel.add(new JScrollPane(resultArea));
+
+        operationBox = new JComboBox<>(new String[]{"Addition", "Subtraction"});
+        calculateButton = new JButton("Calculate");
+
+        JPanel optionsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        optionsPanel.add(new JLabel("Operation:"));
+        optionsPanel.add(operationBox);
+        optionsPanel.add(calculateButton);
+
+        add(inputPanel, BorderLayout.CENTER);
+        add(optionsPanel, BorderLayout.SOUTH);
+
+        calculateButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String selectedOp = operationBox.getSelectedItem().toString();
+                if (selectedOp.equals("Addition")) {
+                    performOperation("add");
+                } else {
+                    performOperation("subtract");
+                }
+            }
+        });
+
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setVisible(true);
+    }
+
+    private void performOperation(String operation) {
+        try {
+            int[][] a = readMatrix(matrixAInput.getText());
+            int[][] b = readMatrix(matrixBInput.getText());
+
+            if (a.length != b.length || a[0].length != b[0].length) {
+                resultArea.setText("Matrix dimensions must match.");
+                return;
+            }
+
+            int[][] result = new int[a.length][a[0].length];
+
+            for (int i = 0; i < a.length; i++) {
+                for (int j = 0; j < a[0].length; j++) {
+                    if (operation.equals("add")) {
+                        result[i][j] = a[i][j] + b[i][j];
+                    } else {
+                        result[i][j] = a[i][j] - b[i][j];
+                    }
+                }
+            }
+
+            StringBuilder resultText = new StringBuilder();
+            for (int[] row : result) {
+                for (int num : row) {
+                    resultText.append(num).append(" ");
+                }
+                resultText.append("\n");
+            }
+
+            resultArea.setText(resultText.toString());
+        } catch (Exception ex) {
+            resultArea.setText("Check the matrix format.");
+        }
+    }
+
+    private int[][] readMatrix(String input) throws Exception {
+        String[] lines = input.trim().split("\n");
+        int[][] matrix = new int[lines.length][];
+        for (int i = 0; i < lines.length; i++) {
+            String[] nums = lines[i].trim().split("\\s+");
+            matrix[i] = new int[nums.length];
+            for (int j = 0; j < nums.length; j++) {
+                matrix[i][j] = Integer.parseInt(nums[j]);
+            }
+        }
+        return matrix;
+    }
+
+    public static void main(String[] args) {
+        new MatrixApp();
+    }
+}
